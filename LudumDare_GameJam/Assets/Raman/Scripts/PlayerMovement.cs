@@ -5,8 +5,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveForce=10;
-    [SerializeField]public float moveJump =7;
+    [Header("Movement")]
+    [SerializeField]private float moveForce=10;
+    [SerializeField] private float moveJump =7;
     private float movementX;
     private Rigidbody2D myBody;
 
@@ -14,12 +15,18 @@ public class PlayerMovement : MonoBehaviour
 
     private Animator anim;
     private SpriteRenderer sr;
-    private bool isGrounded =true;
+
+    [Header("Ground Check")]
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundCheckDistance = 0.25f;
+    [SerializeField] private LayerMask whatIsGround;
+    [SerializeField] private bool isGrounded =true;
+
     void Awake()
     {
         myBody=GetComponent<Rigidbody2D>();
         sr=GetComponent<SpriteRenderer>();
-        //anim=GetComponent<Animator>();    
+        anim = GetComponent<Animator>();
     }
     private void Start()
     {
@@ -27,15 +34,23 @@ public class PlayerMovement : MonoBehaviour
     }
     void Update()
     {
+        GroundCheck();
         Playermovement() ;
-        AnimatePlayer();
+        CheckDirection();
         HandleAnimation();
+        
+    }
+
+    private void GroundCheck()
+    {
+        isGrounded = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
     }
 
     private void HandleAnimation()
     {
-        anim.SetFloat("inputX", movementX);
+        anim.SetFloat("inputX", Mathf.Abs(playerInput.xMove));
         anim.SetFloat("inputY", myBody.velocity.y);
+        anim.SetBool("isGrounded",isGrounded);
     }
 
     void LateUpdate()
@@ -47,7 +62,7 @@ public class PlayerMovement : MonoBehaviour
         movementX = playerInput.xMove;
         transform.position += new Vector3(movementX,0f,0f)*Time.deltaTime*moveForce;
     }
-    void AnimatePlayer (){
+    void CheckDirection (){
         if(movementX>0){
             //anim.SetFloat(input)
             sr.flipX=false;
@@ -69,11 +84,4 @@ public class PlayerMovement : MonoBehaviour
             myBody.AddForce(new Vector2(0f,moveJump), ForceMode2D.Impulse);
         }
     }
-    private void OnCollisionEnter2D(Collision2D collision) {
-        if(collision.gameObject.CompareTag("Ground") ){
-            isGrounded=true;
-            //anim.SetBool("Jump",false);
-        } 
-    }
-    
 }
